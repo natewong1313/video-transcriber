@@ -8,7 +8,6 @@ use user::user_router;
 
 #[tokio::main]
 async fn main() {
-    // let pool = db::connect_db();
     let pool = match db::connect_db().await {
         Ok(pool) => pool,
         Err(err) => panic!("Error connecting to db: {}", err),
