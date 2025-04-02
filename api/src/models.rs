@@ -1,6 +1,6 @@
-#[derive(Serialize)]
-pub struct User {
-    id: u64,
-    username: String,
-    password_has: String,
+use sqlx::{Pool, Sqlite};
+
+#[derive(Clone)]
+pub struct AppState {
+    pub pool: Pool<Sqlite>,
 }
