@@ -1,6 +1,9 @@
 use std::error::Error;
 
-use sqlx::{Sqlite, SqlitePool, migrate::MigrateDatabase};
+use sqlx::{
+    Sqlite, SqlitePool,
+    migrate::{MigrateDatabase, Migrator},
+};
 
 const DB_URL: &str = "sqlite://test.db";
 
@@ -12,5 +15,18 @@ pub async fn connect_db() -> Result<SqlitePool, Box<dyn Error>> {
         }
     }
     let pool = SqlitePool::connect(DB_URL).await?;
+
+    let crate_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap();
+    let migrations_dir = std::path::Path::new(&crate_dir).join("./migrations");
+    match Migrator::new(migrations_dir)
+        .await
+        .unwrap()
+        .run(&pool)
+        .await
+    {
+        Ok(_) => println!("performed migrations"),
+        Err(err) => panic!("error performing migrations: {}", err),
+    }
+
     Ok(pool)
 }
