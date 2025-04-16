@@ -12,10 +12,13 @@ use axum::{
 };
 use axum_extra::extract::WithRejection;
 use serde::{Deserialize, Serialize};
+use serde_json::{Value, json};
 use uuid::Uuid;
+use validator::Validate;
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize, Validate)]
 pub struct CreateUser {
+    #[validate(email)]
     email: String,
     password: String,
 }
@@ -32,9 +35,6 @@ pub fn user_router(state: AppState) -> Router {
     Router::new().nest("/users", router).with_state(state)
 }
 
-const UNKNOWN_ERR: (StatusCode, &str) =
-    (StatusCode::INTERNAL_SERVER_ERROR, "Unknown error occured");
-
 async fn create(
     State(state): State<AppState>,
     WithRejection(Json(payload), _): WithRejection<Json<CreateUser>, ApiError>,
@@ -43,9 +43,12 @@ async fn create(
     let salt = SaltString::generate(&mut OsRng);
     let password_hash = match argon2.hash_password(payload.password.as_bytes(), &salt) {
         Ok(hash) => hash,
-        Err(err) => {
-            println!("Error occured hashing password: {}", err);
-            return (StatusCode::INTERNAL_SERVER_ERROR, "Failed to hash password").into_response();
+        Err(_) => {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"message": "Failed to hash password"})),
+            )
+                .into_response();
         }
     };
 
@@ -66,14 +69,27 @@ async fn create(
         println!("error occured creating user: {}", err);
         let err_code = match err.as_database_error() {
             Some(err) => err.code(),
-            None => return UNKNOWN_ERR.into_response(),
+            None => {
+                return (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(json!({"message": "Unknown error occured"})),
+                )
+                    .into_response();
+            }
         };
         let response = match err_code {
-            Some(code) if code == "2067" => {
-                (StatusCode::BAD_REQUEST, "User with email already exists")
-            }
-            Some(_) => UNKNOWN_ERR,
-            None => UNKNOWN_ERR,
+            Some(code) if code == "2067" => (
+                StatusCode::BAD_REQUEST,
+                Json(json!({"message": "User with email already exists"})),
+            ),
+            Some(code) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"message": format!("Unknown error occured: {}", code)})),
+            ),
+            None => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(json!({"message": "Unknown error occured"})),
+            ),
         };
         return response.into_response();
     };
