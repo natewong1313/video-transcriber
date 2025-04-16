@@ -1,4 +1,4 @@
-use crate::models::AppState;
+use crate::{errors::ApiError, models::AppState};
 use argon2::{
     Argon2, PasswordHasher,
     password_hash::{SaltString, rand_core::OsRng},
@@ -10,6 +10,7 @@ use axum::{
     response::{IntoResponse, Response},
     routing::post,
 };
+use axum_extra::extract::WithRejection;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -34,7 +35,10 @@ pub fn user_router(state: AppState) -> Router {
 const UNKNOWN_ERR: (StatusCode, &str) =
     (StatusCode::INTERNAL_SERVER_ERROR, "Unknown error occured");
 
-async fn create(State(state): State<AppState>, Json(payload): Json<CreateUser>) -> Response {
+async fn create(
+    State(state): State<AppState>,
+    WithRejection(Json(payload), _): WithRejection<Json<CreateUser>, ApiError>,
+) -> Response {
     let argon2 = Argon2::default();
     let salt = SaltString::generate(&mut OsRng);
     let password_hash = match argon2.hash_password(payload.password.as_bytes(), &salt) {
