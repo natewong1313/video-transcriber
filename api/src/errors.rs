@@ -30,11 +30,8 @@ fn handle_validation_rejection(
         ValidationRejection::Valid(validation_errors) => {
             let field_errors = validation_errors.field_errors();
             let invalid_fields: Vec<&str> = field_errors.keys().map(|cow| cow.as_ref()).collect();
-            (
-                StatusCode::BAD_REQUEST,
-                Json(json!({"message": "Validation error", "fields": invalid_fields})),
-            )
-                .into_response()
+            let payload = json!({"message": "Validation error", "fields": invalid_fields});
+            (StatusCode::BAD_REQUEST, Json(payload)).into_response()
         }
         ValidationRejection::Inner(rejection) => {
             let payload = json!({"message": rejection.body_text()});

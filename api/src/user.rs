@@ -1,6 +1,6 @@
 use crate::{
     errors::{ApiError, make_internal_err, make_user_err},
-    models::AppState,
+    models::{AppState, User, UserCredentials},
 };
 use argon2::{
     Argon2, PasswordHasher,
@@ -15,24 +15,7 @@ use axum::{
 };
 use axum_extra::extract::WithRejection;
 use axum_valid::Valid;
-use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use validator::Validate;
-
-#[derive(Debug, Deserialize, Validate)]
-pub struct CreateUser {
-    #[validate(email)]
-    email: String,
-    #[validate(length(min = 8, max = 64))]
-    password: String,
-}
-
-#[derive(Serialize, sqlx::FromRow)]
-pub struct User {
-    id: Uuid,
-    email: String,
-    password_hash: String,
-}
 
 pub fn user_router(state: AppState) -> Router {
     let router = Router::new().route("/", post(create));
@@ -41,7 +24,7 @@ pub fn user_router(state: AppState) -> Router {
 
 async fn create(
     State(state): State<AppState>,
-    WithRejection(Valid(Json(payload)), _): WithRejection<Valid<Json<CreateUser>>, ApiError>,
+    WithRejection(Valid(Json(payload)), _): WithRejection<Valid<Json<UserCredentials>>, ApiError>,
 ) -> Response {
     let argon2 = Argon2::default();
     let salt = SaltString::generate(&mut OsRng);

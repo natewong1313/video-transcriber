@@ -1,8 +1,10 @@
+mod auth;
 mod db;
 mod errors;
 mod models;
 mod user;
 
+use auth::auth_router;
 use axum::{Router, routing::get};
 use models::AppState;
 use user::user_router;
@@ -21,7 +23,8 @@ async fn main() {
     let app = Router::new()
         .route("/", get(root))
         .with_state(app_state.clone())
-        .merge(user_router(app_state));
+        .merge(user_router(app_state.clone()))
+        .merge(auth_router(app_state));
 
     // run our app with hyper, listening globally on port 3000
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
