@@ -1,28 +1,25 @@
 use crate::{
-    errors::{ApiError, make_internal_err, make_user_err},
-    models::{AppState, User, UserCredentials},
+    common::errors::{ApiError, make_internal_err, make_user_err},
+    models::{
+        app::AppState,
+        user::{User, UserCredentials},
+    },
 };
 use argon2::{
     Argon2, PasswordHasher,
     password_hash::{SaltString, rand_core::OsRng},
 };
 use axum::{
-    Json, Router,
+    Json,
     extract::State,
     http::StatusCode,
     response::{IntoResponse, Response},
-    routing::post,
 };
 use axum_extra::extract::WithRejection;
 use axum_valid::Valid;
 use uuid::Uuid;
 
-pub fn user_router(state: AppState) -> Router {
-    let router = Router::new().route("/", post(create));
-    Router::new().nest("/users", router).with_state(state)
-}
-
-async fn create(
+pub async fn create(
     State(state): State<AppState>,
     WithRejection(Valid(Json(payload)), _): WithRejection<Valid<Json<UserCredentials>>, ApiError>,
 ) -> Response {

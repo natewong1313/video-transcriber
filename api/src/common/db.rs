@@ -7,7 +7,7 @@ use sqlx::{
 
 const DB_URL: &str = "sqlite://test.db";
 
-pub async fn connect_db() -> Result<SqlitePool, Box<dyn Error>> {
+pub async fn connect() -> Result<SqlitePool, Box<dyn Error>> {
     if !Sqlite::database_exists(DB_URL).await.unwrap_or(false) {
         match Sqlite::create_database(DB_URL).await {
             Ok(_) => println!("created database"),
