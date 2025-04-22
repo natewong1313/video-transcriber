@@ -5,16 +5,18 @@ edition = "2024"
 
 [dependencies]
 argon2 = { version = "0.5.3", features = ["std"] }
+async-trait = "0.1.88"
 axum = {version = "0.8.3", features = ["macros"]} 
 axum-extra = "0.10.1"
 axum-login = "0.17.0"
 axum-valid = "0.23.0"
+password-auth = "1.0.0"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
-sqlx = { version = "0.8.3", features = ["sqlite", "runtime-tokio-rustls"] }
+sqlx = { version = "0.8.3", features = ["sqlite", "runtime-tokio-rustls", "uuid", "serde"] }
 thiserror = "2.0.12"
 tokio = { version = "1.44.1", features = ["full"] }
+tower-http = { version = "0.6.2", features = ["trace"] }
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
-uuid = {version = "1.16.0", features = ["v4", "serde"]}
 validator = {version = "0.20.0", features = ["derive"]}

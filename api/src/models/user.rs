@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
+use sqlx::{FromRow, types::Uuid};
 use validator::Validate;
 
-#[derive(Debug, Deserialize, Validate)]
+#[derive(Debug, Deserialize, Validate, Clone)]
 pub struct UserCredentials {
     #[validate(email)]
     pub email: String,
@@ -10,7 +10,7 @@ pub struct UserCredentials {
     pub password: String,
 }
 
-#[derive(Serialize, sqlx::FromRow, Debug, Clone)]
+#[derive(Clone, Serialize, Deserialize, FromRow)]
 pub struct User {
     pub id: Uuid,
     pub email: String,

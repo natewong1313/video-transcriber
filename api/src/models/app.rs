@@ -1,6 +1,6 @@
 use sqlx::{Pool, Sqlite};
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct AppState {
     pub pool: Pool<Sqlite>,
 }
