@@ -12,7 +12,6 @@ use axum_login::{AuthUser, AuthnBackend, UserId};
 use axum_valid::Valid;
 use password_auth::verify_password;
 use tokio::task;
-use uuid::Uuid;
 
 use crate::{
     common::errors::ApiError,
@@ -33,7 +32,7 @@ impl std::fmt::Debug for User {
 }
 
 impl AuthUser for User {
-    type Id = Uuid;
+    type Id = sqlx::types::Uuid;
 
     fn id(&self) -> Self::Id {
         self.id
@@ -45,7 +44,7 @@ impl AuthUser for User {
 }
 
 #[derive(Debug, Clone)]
-struct Backend {
+pub struct Backend {
     state: AppState,
 }
 
@@ -92,15 +91,12 @@ impl AuthnBackend for Backend {
     }
 }
 
+pub type AuthSession = axum_login::AuthSession<Backend>;
+
 pub async fn login(
+    mut auth_session: AuthSession,
     State(state): State<AppState>,
     WithRejection(Valid(Json(payload)), _): WithRejection<Valid<Json<UserCredentials>>, ApiError>,
 ) -> Response {
-    let user = User {
-        id: Uuid::new_v4(),
-        email: payload.email,
-        password_hash: String::from(""),
-    };
-
-    (StatusCode::CREATED, Json(user)).into_response()
+    // (StatusCode::CREATED, Json(user)).into_response()
 }
