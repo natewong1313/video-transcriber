@@ -1,5 +1,5 @@
 use crate::{
-    common::errors::{ApiError, make_internal_err, make_user_err},
+    common::errors::{ApiError, make_internal_err},
     models::{
         app::AppState,
         user::{User, UserCredentials},

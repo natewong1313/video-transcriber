@@ -12,6 +12,7 @@
   "dependencies": {
     "@fontsource-variable/noto-sans-mono": "^5.2.6",
     "@tailwindcss/vite": "^4.0.17",
+    "@tanstack/react-form": "^1.7.0",
     "@tanstack/react-router": "^1.114.29",
     "lucide-react": "^0.486.0",
     "react": "^19.0.0",
