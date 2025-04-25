@@ -33,7 +33,7 @@ impl std::fmt::Debug for User {
 }
 
 impl AuthUser for User {
-    type Id = sqlx::types::Uuid;
+    type Id = i64;
 
     fn id(&self) -> Self::Id {
         self.id

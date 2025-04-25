@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use sqlx::{FromRow, types::Uuid};
+use sqlx::FromRow;
 use validator::Validate;
 
 #[derive(Debug, Deserialize, Validate, Clone)]
@@ -12,7 +12,7 @@ pub struct UserCredentials {
 
 #[derive(Clone, Serialize, Deserialize, FromRow)]
 pub struct User {
-    pub id: Uuid,
+    pub id: i64,
     pub email: String,
     // don't return pw hash in a response
     #[serde(skip_serializing)]
