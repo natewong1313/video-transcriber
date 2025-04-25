@@ -44,6 +44,7 @@ pub async fn serve() {
     let app = Router::new()
         .with_state(app_state.clone())
         .merge(routers::user_router(app_state.clone()))
+        .merge(routers::auth_router(app_state))
         .layer(auth_layer)
         .layer(
             TraceLayer::new_for_http()

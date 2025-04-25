@@ -17,7 +17,7 @@ use axum::{
 };
 use axum_extra::extract::WithRejection;
 use axum_valid::Valid;
-use uuid::Uuid;
+use sqlx::types::Uuid;
 
 pub async fn create(
     State(state): State<AppState>,

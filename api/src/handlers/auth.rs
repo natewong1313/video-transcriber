@@ -11,6 +11,7 @@ use axum_extra::extract::WithRejection;
 use axum_login::{AuthUser, AuthnBackend, UserId};
 use axum_valid::Valid;
 use password_auth::verify_password;
+use serde_json::json;
 use tokio::task;
 
 use crate::{
@@ -72,7 +73,7 @@ impl AuthnBackend for Backend {
         &self,
         UserCredentials { email, password }: Self::Credentials,
     ) -> Result<Option<Self::User>, Self::Error> {
-        let user: Option<Self::User> = sqlx::query_as("SELECT FROM users WHERE email = $1")
+        let user: Option<Self::User> = sqlx::query_as("SELECT * FROM users WHERE email = $1")
             .bind(email)
             .fetch_optional(&self.state.pool)
             .await?;
@@ -98,5 +99,20 @@ pub async fn login(
     State(state): State<AppState>,
     WithRejection(Valid(Json(payload)), _): WithRejection<Valid<Json<UserCredentials>>, ApiError>,
 ) -> Response {
-    // (StatusCode::CREATED, Json(user)).into_response()
+    let user = match auth_session.authenticate(payload.clone()).await {
+        Ok(Some(user)) => user,
+        Ok(None) => {
+            let payload = json!({"message": "Invalid credentials"});
+            return (StatusCode::BAD_REQUEST, Json(payload)).into_response();
+        }
+        Err(err) => {
+            let payload = json!({"message": err.to_string()});
+            return (StatusCode::INTERNAL_SERVER_ERROR, Json(payload)).into_response();
+        }
+    };
+    if auth_session.login(&user).await.is_err() {
+        let payload = json!({"message": "Error logging in"});
+        return (StatusCode::INTERNAL_SERVER_ERROR, Json(payload)).into_response();
+    }
+    (StatusCode::CREATED, Json(user)).into_response()
 }
