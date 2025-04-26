@@ -1,5 +1,8 @@
 use crate::{
-    common::errors::{ApiError, make_internal_err},
+    common::{
+        auth_backend::AuthSession,
+        errors::{ApiError, make_internal_err},
+    },
     models::{
         app::AppState,
         user::{User, UserCredentials},
@@ -74,4 +77,15 @@ pub async fn create(
 
     user.id = user_id;
     (StatusCode::CREATED, Json(user)).into_response()
+}
+
+pub async fn get(auth_session: AuthSession, State(_): State<AppState>) -> Response {
+    match auth_session.user {
+        Some(user) => (StatusCode::OK, Json(user)).into_response(),
+        None => (
+            StatusCode::FORBIDDEN,
+            Json(json!({"message": "Valid login required"})),
+        )
+            .into_response(),
+    }
 }

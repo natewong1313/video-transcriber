@@ -8,8 +8,7 @@ use tower_sessions::{ExpiredDeletion, Expiry, SessionManagerLayer, cookie::Key};
 use tracing::Level;
 
 use crate::{
-    common::{db::connect, store::SqliteStore},
-    handlers::auth::Backend,
+    common::{auth_backend::Backend, db::connect, store::SqliteStore},
     models::app::AppState,
 };
 

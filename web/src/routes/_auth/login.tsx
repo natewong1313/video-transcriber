@@ -1,5 +1,6 @@
 import { Updater, useForm } from "@tanstack/react-form";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMutation } from "@tanstack/react-query";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_auth/login")({
   component: RouteComponent,
@@ -29,13 +30,30 @@ function Input({
 }
 
 function RouteComponent() {
+  const navigate = useNavigate();
+  const loginMutation = useMutation({
+    mutationFn: async (payload: { email: string; password: string }) => {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) {
+        const message = (await response.json())["message"];
+        throw new Error(message);
+      }
+    },
+    onSuccess: async () => {
+      navigate({ to: "/" });
+    },
+  });
   const form = useForm({
     defaultValues: {
       email: "",
       password: "",
     },
     onSubmit: async ({ value }) => {
-      console.log(value);
+      await loginMutation.mutateAsync(value);
     },
   });
   return (
@@ -84,6 +102,9 @@ function RouteComponent() {
             </button>
           )}
         />
+        {loginMutation.error && (
+          <p className="mt-3 text-red-500">{loginMutation.error.message}</p>
+        )}
       </form>
       <p className="text-sm mt-4 text-gray-600">
         need an account?{" "}

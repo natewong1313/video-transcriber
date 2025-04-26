@@ -1,8 +1,22 @@
-import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Link,
+  Outlet,
+  redirect,
+} from "@tanstack/react-router";
 import { Clapperboard } from "lucide-react";
+import { getAuthenticatedUser } from "../../lib/auth";
 
 export const Route = createFileRoute("/_auth")({
   component: RouteComponent,
+  beforeLoad: async ({ location }) => {
+    if (await getAuthenticatedUser()) {
+      throw redirect({
+        to: "/",
+        search: { redirect: location.href },
+      });
+    }
+  },
 });
 
 function RouteComponent() {
