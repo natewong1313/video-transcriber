@@ -1,6 +1,7 @@
+use aws_sdk_s3::{error::SdkError, operation::put_object::PutObjectError};
 use axum::{
     Json,
-    extract::rejection::JsonRejection,
+    extract::{multipart::MultipartError, rejection::JsonRejection},
     http::StatusCode,
     response::{IntoResponse, Response},
 };
@@ -13,30 +14,55 @@ use validator::ValidationErrors;
 pub enum ApiError {
     #[error(transparent)]
     Valid(#[from] ValidRejection<JsonRejection>),
+
+    #[error("{0}")]
+    Unknown(String),
+    #[error("Valid login required")]
+    Unauthorized,
+    #[error(transparent)]
+    MultiPart(#[from] MultipartError),
+    #[error(transparent)]
+    S3Error(#[from] SdkError<PutObjectError>),
 }
 
 impl IntoResponse for ApiError {
     fn into_response(self) -> Response {
-        match self {
+        let (status, body) = match self {
             ApiError::Valid(rejection) => handle_validation_rejection(rejection),
-        }
+            ApiError::Unknown(msg) => (StatusCode::INTERNAL_SERVER_ERROR, json!({"message": msg})),
+            ApiError::Unauthorized => (
+                StatusCode::UNAUTHORIZED,
+                json!({"message": "Valid login required"}),
+            ),
+            ApiError::MultiPart(err) => (
+                StatusCode::BAD_REQUEST,
+                json!({"message": format!("Error parsing form: {}", err)}),
+            ),
+            ApiError::S3Error(err) => (
+                StatusCode::BAD_REQUEST,
+                json!({"message": format!("Upload error: {}", err)}),
+            ),
+        };
+        (status, Json(body)).into_response()
     }
 }
 
 fn handle_validation_rejection(
     rejection: ValidationRejection<ValidationErrors, JsonRejection>,
-) -> Response {
+) -> (StatusCode, Value) {
     match rejection {
         ValidationRejection::Valid(validation_errors) => {
             let field_errors = validation_errors.field_errors();
             let invalid_fields: Vec<&str> = field_errors.keys().map(|cow| cow.as_ref()).collect();
-            let payload = json!({"message": "Validation error", "fields": invalid_fields});
-            (StatusCode::BAD_REQUEST, Json(payload)).into_response()
+            (
+                StatusCode::BAD_REQUEST,
+                json!({"message": "Validation error", "fields": invalid_fields}),
+            )
         }
-        ValidationRejection::Inner(rejection) => {
-            let payload = json!({"message": rejection.body_text()});
-            (rejection.status(), Json(payload)).into_response()
-        }
+        ValidationRejection::Inner(rejection) => (
+            rejection.status(),
+            json!({"message": rejection.body_text()}),
+        ),
     }
 }
 

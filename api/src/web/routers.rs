@@ -6,7 +6,7 @@ pub mod routers {
 
     use crate::{
         handlers::{
-            auth,
+            auth, transcribe,
             users::{self},
         },
         models::app::AppState,
@@ -21,5 +21,9 @@ pub mod routers {
     pub fn auth_router(state: AppState) -> Router {
         let router = Router::new().route("/login", post(auth::login));
         Router::new().nest("/auth", router).with_state(state)
+    }
+    pub fn transcribe_router(state: AppState) -> Router {
+        let router = Router::new().route("/new", post(transcribe::upload));
+        Router::new().nest("/transcribe", router).with_state(state)
     }
 }
