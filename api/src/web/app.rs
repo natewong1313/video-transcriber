@@ -6,19 +6,20 @@ use axum_login::AuthManagerLayerBuilder;
 use time::Duration;
 
 use axum::{Router, extract::DefaultBodyLimit};
-use tokio::{signal, task::AbortHandle};
+use tokio::{signal, sync::mpsc::Sender, task::AbortHandle};
 use tower_http::trace::{self, TraceLayer};
 use tower_sessions::{ExpiredDeletion, Expiry, SessionManagerLayer};
 use tracing::Level;
 
 use crate::{
-    common::{auth_backend::Backend, db::connect, store::SqliteStore},
+    common::{db::connect, store::SqliteStore},
     models::app::AppState,
+    services::{auth::Backend, transcribe::TranscribeTask},
 };
 
 use super::routers::routers;
 
-pub async fn serve() {
+pub async fn serve(tx: Sender<TranscribeTask>) {
     if let Err(err) = dotenvy::dotenv() {
         panic!("Error parsing .env: {}", err);
     };
@@ -38,7 +39,11 @@ pub async fn serve() {
         .await;
     let s3_client = aws_sdk_s3::Client::new(&sdk_config);
 
-    let app_state = AppState { pool, s3_client };
+    let app_state = AppState {
+        pool,
+        s3_client,
+        tx,
+    };
 
     let session_store = SqliteStore::new(app_state.clone().pool);
     if let Err(err) = session_store.migrate().await {

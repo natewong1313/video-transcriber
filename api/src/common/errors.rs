@@ -10,6 +10,8 @@ use serde_json::{Value, json};
 use thiserror::Error;
 use validator::ValidationErrors;
 
+use crate::services::transcribe::TranscribeTask;
+
 #[derive(Debug, Error)]
 pub enum ApiError {
     #[error(transparent)]
@@ -23,6 +25,8 @@ pub enum ApiError {
     MultiPart(#[from] MultipartError),
     #[error(transparent)]
     S3Error(#[from] SdkError<PutObjectError>),
+    #[error(transparent)]
+    TranscribeChannelError(#[from] tokio::sync::mpsc::error::SendError<TranscribeTask>),
 }
 
 impl IntoResponse for ApiError {
@@ -40,6 +44,10 @@ impl IntoResponse for ApiError {
             ),
             ApiError::S3Error(err) => (
                 StatusCode::BAD_REQUEST,
+                json!({"message": format!("Upload error: {}", err)}),
+            ),
+            ApiError::TranscribeChannelError(err) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
                 json!({"message": format!("Upload error: {}", err)}),
             ),
         };

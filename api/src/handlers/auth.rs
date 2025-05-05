@@ -9,8 +9,9 @@ use axum_valid::Valid;
 use serde_json::json;
 
 use crate::{
-    common::{auth_backend::AuthSession, errors::ApiError},
+    common::errors::ApiError,
     models::{app::AppState, user::UserCredentials},
+    services::auth::AuthSession,
 };
 
 pub async fn login(

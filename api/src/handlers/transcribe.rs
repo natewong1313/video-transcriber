@@ -8,8 +8,9 @@ use axum::{
 use serde_json::json;
 
 use crate::{
-    common::{auth_backend::AuthSession, errors::ApiError},
+    common::errors::ApiError,
     models::app::AppState,
+    services::{auth::AuthSession, transcribe::TranscribeTask},
 };
 
 pub async fn upload(
@@ -27,6 +28,7 @@ pub async fn upload(
             .file_name()
             .ok_or(ApiError::Unknown("Missing file name".to_owned()))?
             .to_string();
+        tracing::debug!("uploading ${} to s3", file_name);
         let data = field.bytes().await?;
         let body = ByteStream::from(data);
         let object_key = format!("{}/{}", user.id, file_name);
@@ -38,6 +40,12 @@ pub async fn upload(
             .body(body)
             .send()
             .await?;
+        tracing::debug!("uploaded ${} to s3, sending to consumer", file_name);
+        let task = TranscribeTask {
+            url: object_key.clone(),
+            user_id: user.id,
+        };
+        let _result = state.tx.send(task).await?;
         return Ok((
             StatusCode::OK,
             Json(json!({"message": "File uploaded successfully", "location": object_key})),

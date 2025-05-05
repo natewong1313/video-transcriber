@@ -1,12 +1,10 @@
 use crate::{
-    common::{
-        auth_backend::AuthSession,
-        errors::{ApiError, make_internal_err},
-    },
+    common::errors::{ApiError, make_internal_err},
     models::{
         app::AppState,
         user::{User, UserCredentials},
     },
+    services::auth::AuthSession,
 };
 use argon2::{
     Argon2, PasswordHasher,
