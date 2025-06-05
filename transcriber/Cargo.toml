@@ -1,0 +1,10 @@
+[package]
+name = "transcriber"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+futures-util = "0.3.31"
+reqwest = { version = "0.12.19", features = ["stream"] } 
+tokio = { version = "1.45.1", features = ["full"] }
+whisper-rs = "0.14.2"
