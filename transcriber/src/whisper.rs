@@ -1,10 +1,12 @@
-use std::{error::Error, io::ErrorKind};
+use std::{error::Error, path::PathBuf};
 
 use futures_util::StreamExt;
 use tokio::{
-    fs::{File, metadata},
+    fs::{self, File},
     io::AsyncWriteExt,
 };
+
+const MODELS_PATH: &str = "./models";
 
 pub enum ModelType {
     Base,
@@ -27,19 +29,17 @@ impl ModelType {
 }
 
 // given a model, download it to the file system and return the file path
-pub async fn download_model(model_type: ModelType) -> Result<String, Box<dyn Error>> {
-    let filename = model_type.filename();
-    let output_path = format!("./models/{}", filename);
-    // check if model has already been downloaded
-    // TODO: add logic for if a new model version is released
-    let mut file = match File::create_new(&output_path).await {
-        Ok(file) => file,
-        Err(e) => match e.kind() {
-            ErrorKind::AlreadyExists => return Ok(output_path),
-            _ => return Err(Box::new(e)),
-        },
-    };
+pub async fn download_model(model_type: ModelType) -> Result<PathBuf, Box<dyn Error>> {
+    fs::create_dir_all(MODELS_PATH).await?;
 
+    let filename = model_type.filename();
+    let output_path_str = format!("{}/{}", MODELS_PATH, filename);
+    let output_path = PathBuf::from(&output_path_str);
+    if output_path.exists() {
+        return Ok(output_path);
+    }
+
+    let mut file = File::create_new(&output_path).await?;
     let download_url = format!(
         "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/{}",
         filename

@@ -98,6 +98,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d71b6127be86fdcfddb610f7182ac57211d4b18a3e9c82eb2d17662f2227ad6a"
 
 [[package]]
+name = "camino"
+version = "1.1.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0da45bc31171d8d6960122e222a67740df867c1dd53b4d51caa297084c185cab"
+
+[[package]]
 name = "cc"
 version = "1.2.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -167,6 +173,12 @@ dependencies = [
  "quote",
  "syn",
 ]
+
+[[package]]
+name = "dotenv"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "77c90badedccf4105eca100756a0b1289e191f6fcbdadd3cee1d2f614f97da8f"
 
 [[package]]
 name = "either"
@@ -361,6 +373,12 @@ name = "hashbrown"
 version = "0.15.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "84b26c544d002229e640969970a2e74021aadf6e2f96372b9c58eff97de08eb3"
+
+[[package]]
+name = "hound"
+version = "3.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "62adaabb884c94955b19907d60019f4e145d091c75345379e70d1ee696f7854f"
 
 [[package]]
 name = "http"
@@ -830,6 +848,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "paste"
+version = "1.0.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "57c0d7b74b563b49d38dae00a0c37d4d6de9b432382b2892f0574ddcae73fd0a"
+
+[[package]]
 name = "percent-encoding"
 version = "2.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -994,6 +1018,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "rsmpeg"
+version = "0.15.2+ffmpeg.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "affc0df87c9691b97b25d3df4fd0ba6a037a0ebc27f37f6a6f0e5682443cf9a9"
+dependencies = [
+ "paste",
+ "rusty_ffmpeg",
+ "thiserror",
+]
+
+[[package]]
 name = "rustc-demangle"
 version = "0.1.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1056,6 +1091,18 @@ name = "rustversion"
 version = "1.0.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8a0d197bd2c9dc6e53b84da9556a69ba4cdfab8619eb41a8bd1cc2027a0f6b1d"
+
+[[package]]
+name = "rusty_ffmpeg"
+version = "0.16.2+ffmpeg.7.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c78663c63c57563d9640318a9e7f6782fa5702caadced83aa57b5a182acd7e4b"
+dependencies = [
+ "bindgen",
+ "camino",
+ "once_cell",
+ "pkg-config",
+]
 
 [[package]]
 name = "ryu"
@@ -1263,6 +1310,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "thiserror"
+version = "2.0.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "567b8a2dae586314f7be2a752ec7474332959c6460e02bde30d702a66d488708"
+dependencies = [
+ "thiserror-impl",
+]
+
+[[package]]
+name = "thiserror-impl"
+version = "2.0.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7f7cf42b4507d8ea322120659672cf1b9dbb93f8f2d4ecfd6e51350ff5b17a1d"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "tinystr"
 version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1402,8 +1469,11 @@ dependencies = [
 name = "transcriber"
 version = "0.1.0"
 dependencies = [
+ "dotenv",
  "futures-util",
+ "hound",
  "reqwest",
+ "rsmpeg",
  "tokio",
  "whisper-rs",
 ]

@@ -1,1 +1,4 @@
 /target
+models/
+*.mp3
+*.mp4
