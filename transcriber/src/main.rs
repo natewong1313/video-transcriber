@@ -1,26 +1,32 @@
-use std::{error::Error, path::PathBuf};
+use std::{
+    error::Error,
+    path::{Path, PathBuf},
+};
+
+use whisper::{ModelType, do_transcription};
 
 mod converter;
 mod whisper;
 
+const MODEL_TYPE: ModelType = ModelType::Base;
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    let file_arg = std::env::args()
+    let mut file_path = std::env::args()
         .nth(1)
         .expect("please provide a file path as an argument");
-    let mut file_path = PathBuf::from(&file_arg);
 
-    let model_path_str = whisper::download_model(whisper::ModelType::Tiny).await?;
-    let model_path = PathBuf::from(&model_path_str);
+    let model_path = whisper::download_model(MODEL_TYPE).await?;
 
-    let Some(file_ext) = file_path.extension() else {
+    let Some(file_ext) = Path::new(&file_path).extension() else {
         return Err(Box::from("could not parse input file"));
     };
 
     if file_ext != "wav" {
         file_path = converter::to_wav(file_path).await?;
-        println!("new file path: {:?}", file_path);
     }
+
+    do_transcription(MODEL_TYPE, model_path, file_path).await?;
 
     Ok(())
 }

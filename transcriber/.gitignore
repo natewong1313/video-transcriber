@@ -2,3 +2,4 @@
 models/
 *.mp3
 *.mp4
+tmp/
