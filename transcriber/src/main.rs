@@ -1,7 +1,4 @@
-use std::{
-    error::Error,
-    path::{Path, PathBuf},
-};
+use std::{error::Error, path::Path};
 
 use whisper::{ModelType, do_transcription};
 

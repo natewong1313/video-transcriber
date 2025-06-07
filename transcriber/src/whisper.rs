@@ -70,7 +70,7 @@ pub async fn do_transcription(
     model_path: String,
     file_path: String,
 ) -> Result<String, Box<dyn Error>> {
-    // whisper_rs::install_logging_hooks();
+    whisper_rs::install_logging_hooks();
 
     let mut ctx_params = WhisperContextParameters::default();
     ctx_params.dtw_parameters.mode = DtwMode::ModelPreset {
