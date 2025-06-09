@@ -9,7 +9,7 @@ services:
     ports:
       - "6969:5432"
     volumes:
-      - ./db:/var/lib/postgresql/data
+      - ./pg-data:/var/lib/postgresql/data
     restart: always
     environment:
       POSTGRES_DB: transcriberdb

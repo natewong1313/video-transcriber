@@ -1,23 +1,28 @@
 use std::path::Path;
 
+use crate::db::Db;
+use crate::models::{Task, TaskStatus};
 use crate::whisper::ModelType;
 use crate::{converter, utils};
 use anyhow::{Result, anyhow};
 use hound::{WavReader, WavSpec};
 use reqwest::Url;
 use serde::{Deserialize, Serialize};
+use sqlx::PgPool;
 use tokio::runtime::Handle;
 use whisper_rs::{DtwMode, FullParams, SamplingStrategy, WhisperContext, WhisperContextParameters};
 
 pub const DOWNLOADS_FOLDER_PATH: &str = "./tmp/downloads";
 
-#[derive(Serialize, Deserialize)]
-pub struct Task {
-    pub id: i64,
-    pub url: String,
-}
-
-pub fn start(model_type: ModelType, model_path: String, transcriber_task: Task) -> Result<String> {
+pub fn start(
+    model_type: ModelType,
+    model_path: String,
+    transcriber_task: Task,
+    db_pool: PgPool,
+) -> Result<String> {
+    let rt = Handle::current();
+    let db = Db::new(db_pool);
+    rt.block_on(db.update_task_status(transcriber_task.clone(), TaskStatus::InProgress))?;
     // whisper_rs::install_logging_hooks();
 
     let download_url = Url::parse(&transcriber_task.url)?;
@@ -32,7 +37,6 @@ pub fn start(model_type: ModelType, model_path: String, transcriber_task: Task) 
     };
     let decoded_file_name = urlencoding::decode(file_name)?;
 
-    let rt = Handle::current();
     let mut file_path = format!(
         "{}/{}_{}",
         DOWNLOADS_FOLDER_PATH, transcriber_task.id, decoded_file_name
@@ -42,7 +46,7 @@ pub fn start(model_type: ModelType, model_path: String, transcriber_task: Task) 
         &file_path,
     ))?;
     if file_ext != "wav" {
-        file_path = rt.block_on(converter::to_wav(file_path, DOWNLOADS_FOLDER_PATH))?;
+        file_path = rt.block_on(converter::to_wav(&file_path, DOWNLOADS_FOLDER_PATH))?;
     }
 
     let mut ctx_params = WhisperContextParameters::default();

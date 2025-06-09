@@ -1,6 +1,6 @@
 use anyhow::{Error, Result};
 use dotenv::dotenv;
-use sqlx::postgres::PgListener;
+use sqlx::{PgPool, postgres::PgListener};
 use std::io::ErrorKind;
 use tokio::{
     fs,
@@ -9,6 +9,8 @@ use tokio::{
 use transcriber::DOWNLOADS_FOLDER_PATH;
 use whisper::ModelType;
 mod converter;
+mod db;
+mod models;
 mod transcriber;
 mod utils;
 mod whisper;
@@ -30,12 +32,16 @@ async fn main() -> Result<()> {
 
     let model_path = whisper::download_model(MODEL_TYPE).await?;
 
+    let db_pool = PgPool::connect(&db_url).await?;
     let mut db_listener = PgListener::connect(&db_url).await?;
     db_listener.listen(CHANNEL).await?;
     loop {
         let new_task = db_listener.recv().await?;
-        let transcriber_task: transcriber::Task = serde_json::from_str(new_task.payload())?;
-        let model_path = model_path.clone();
-        task::spawn_blocking(move || transcriber::start(MODEL_TYPE, model_path, transcriber_task));
+        let transcriber_task: models::Task = serde_json::from_str(new_task.payload())?;
+        let c_model_path = model_path.clone();
+        let c_db_pool = db_pool.clone();
+        task::spawn_blocking(move || {
+            transcriber::start(MODEL_TYPE, c_model_path, transcriber_task, c_db_pool)
+        });
     }
 }
