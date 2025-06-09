@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  db:
+    container_name: transcriberdb
+    image: postgres
+    expose:
+      - "6969"
+    ports:
+      - "6969:5432"
+    volumes:
+      - ./db:/var/lib/postgresql/data
+    restart: always
+    environment:
+      POSTGRES_DB: transcriberdb
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
