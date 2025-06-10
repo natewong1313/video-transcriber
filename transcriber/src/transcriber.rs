@@ -94,7 +94,6 @@ pub fn start(
     whisper_rs::convert_integer_to_float_audio(&og_samples, &mut samples)?;
 
     log::info!(target: &task_name, "start whisper");
-    // run that shit
     ctx_state.full(params, &samples)?;
 
     log::info!(target: &task_name, "process segments");

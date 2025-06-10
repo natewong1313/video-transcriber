@@ -15,7 +15,7 @@ mod transcriber;
 mod utils;
 mod whisper;
 
-const MODEL_TYPE: ModelType = ModelType::Large;
+const MODEL_TYPE: ModelType = ModelType::Tiny;
 const CHANNEL: &str = "transcriber_tasks";
 
 #[tokio::main]
