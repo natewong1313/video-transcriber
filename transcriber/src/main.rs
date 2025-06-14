@@ -15,8 +15,8 @@ mod transcriber;
 mod utils;
 mod whisper;
 
-const MODEL_TYPE: ModelType = ModelType::Tiny;
-const CHANNEL: &str = "transcriber_tasks";
+const MODEL_TYPE: ModelType = ModelType::Base;
+const CHANNEL: &str = "task_inserted";
 
 #[tokio::main]
 async fn main() -> Result<()> {

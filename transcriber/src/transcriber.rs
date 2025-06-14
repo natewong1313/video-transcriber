@@ -16,9 +16,9 @@ pub const DOWNLOADS_FOLDER_PATH: &str = "./tmp/downloads";
 pub fn start(
     model_type: ModelType,
     model_path: String,
-    transcriber_task: Task,
+    mut transcriber_task: Task,
     db_pool: PgPool,
-) -> Result<String> {
+) -> Result<()> {
     let task_id = transcriber_task.id;
     let task_name = format!("task{task_id}");
     log::info!(target: &task_name, "in progress");
@@ -26,7 +26,6 @@ pub fn start(
     // need this to run async function in this sync block
     let rt = Handle::current();
     let db = Db::new(db_pool);
-    rt.block_on(db.update_task_status(transcriber_task.clone(), TaskStatus::InProgress))?;
     whisper_rs::install_logging_hooks();
 
     log::info!(target: &task_name, "checking url");
@@ -106,8 +105,9 @@ pub fn start(
     }
 
     log::info!(target: &task_name, "uploaded transcript");
-    rt.block_on(db.update_task_transcript(transcriber_task.clone(), &transcript))?;
+    transcriber_task.transcript = transcript;
+    rt.block_on(db.update_task_transcript(transcriber_task.clone()))?;
     rt.block_on(db.update_task_status(transcriber_task.clone(), TaskStatus::Finished))?;
 
-    Ok(transcript)
+    Ok(())
 }

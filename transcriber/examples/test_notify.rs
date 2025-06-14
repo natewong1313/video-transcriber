@@ -21,6 +21,7 @@ async fn main() -> Result<()> {
         id: task_id,
         url: vid_url.to_string(),
         status: TaskStatus::NotStarted.to_string(),
+        transcript: "".to_string(),
     };
 
     sqlx::query("SELECT pg_notify('transcriber_tasks', $1)")
