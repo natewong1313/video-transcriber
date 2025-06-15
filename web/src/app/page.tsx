@@ -1,5 +1,4 @@
 import FileUploader from "@/components/file-uploader";
-import { FolderIcon, FolderOpenIcon } from "@phosphor-icons/react/dist/ssr";
 
 export default function Home() {
   return (
@@ -9,9 +8,13 @@ export default function Home() {
           video transcriber{" "}
           <span className="text-sm text-neutral-400">(beta)</span>
         </div>
-        <button className="bg-violet-500 hover:bg-violet-600 active:scale-90 text-white font-medium px-4 py-1.5 text-sm rounded-sm transition-all duration-100">
-          sign in
-        </button>
+        <a
+          href="https://www.github.com/natewong1313/video-transcriber"
+          target="_blank"
+          className="bg-violet-500 hover:bg-violet-600 active:scale-90 text-white font-medium px-4 py-1.5 text-sm rounded-sm transition-all duration-100"
+        >
+          view source
+        </a>
       </nav>
       <div className="flex items-center justify-center flex-col font-plex py-16">
         <h1 className="text-white font-semibold text-4xl">Video Transcriber</h1>

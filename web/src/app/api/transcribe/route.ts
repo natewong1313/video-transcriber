@@ -3,6 +3,12 @@ import { PutObjectCommand } from "@aws-sdk/client-s3";
 import s3client from "@/lib/s3-client";
 import { v4 as uuidv4 } from "uuid";
 
+export type TaskResult = {
+  id: string;
+  fileName: string;
+  transcript: string;
+};
+
 export async function POST(request: Request) {
   const formData = await request.formData();
   const files = formData.getAll("files") as File[];
@@ -13,7 +19,6 @@ export async function POST(request: Request) {
       controller.close();
     },
   });
-  console.log("ok");
   return new Response(stream, {
     headers: {
       Connection: "keep-alive",
@@ -26,28 +31,17 @@ export async function POST(request: Request) {
 
 async function runTask(
   file: File,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   controller: ReadableStreamDefaultController<any>
 ) {
   const taskId = uuidv4();
-  // let client = await pool.connect();
-  // const queryRes = await client.query(
-  //   "INSERT INTO tasks (status) VALUES('notStarted') RETURNING id"
-  // );
-  // if (queryRes.rows.length != 1) {
-  // }
-  // const taskId: number = queryRes.rows[0].id;
-  // client.release()
-
   const fileUrl = await uploadFile(file, taskId);
   const client = await pool.connect();
   await client.query(
     "INSERT INTO TASKS(id, url, status) VALUES ($1, $2, 'notStarted')",
     [taskId, fileUrl]
   );
-  console.log("inserted task");
-
   await client.query(`LISTEN task_${taskId.replaceAll("-", "_")}_done`);
-  console.log("started listening");
 
   return new Promise((resolve, reject) => {
     client.on("notification", async (notif) => {
@@ -55,9 +49,10 @@ async function runTask(
         return reject("missing payload");
       }
       // strip out status and url, we dont wanna expose the s3 url
-      const { id, transcript } = JSON.parse(notif.payload);
+      const { id, transcript, url } = JSON.parse(notif.payload);
+      const fileName = url.substring(url.lastIndexOf("/") + 1);
       controller.enqueue(
-        new TextEncoder().encode(JSON.stringify({ id, transcript }))
+        new TextEncoder().encode(JSON.stringify({ id, transcript, fileName }))
       );
       resolve(":)");
     });
